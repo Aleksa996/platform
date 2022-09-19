@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import Player from "../entities/Player";
+import Birdman from '../entities/Birdman';
 
 class Play extends Phaser.Scene {
 
@@ -12,14 +13,21 @@ class Play extends Phaser.Scene {
     const map = this.createMap();
     const layers = this.createLayers(map);
     const playerZones = this.getPlayerZones(layers.playerZones);
-    const player = this.createPlayer(playerZones);
+    const player = this.createPlayer(playerZones.start);
+    const enemies = this.createEnemies(layers.enemySpawns);
     
+    this.createEnemyColliders(enemies,{
+      colliders:{
+      platformsColliders:layers.platformsColliders,
+      player
+    }});
+
     this.createPlayerColliders(player,{
       colliders:{
       platformsColliders:layers.platformsColliders
     }});
 
-    this.createEndOfLevel(playerZones.end);
+    this.createEndOfLevel(playerZones.end, player);
     this.setupFollowupCameraOn(player);
   }
 
@@ -35,15 +43,30 @@ class Play extends Phaser.Scene {
     const enviroment = map.createStaticLayer('environment', tileset);
     const platforms = map.createDynamicLayer('platforms', tileset);
     const playerZones = map.getObjectLayer("player_zones");
+    const enemySpawns = map.getObjectLayer("enemy_spawns");
     
 
     platformsColliders.setCollisionByProperty({collides: true});
 
-    return {enviroment, platforms, platformsColliders,playerZones};
+    return {enviroment, platforms, platformsColliders,playerZones,enemySpawns};
   }
 
-  createPlayer({start}){
+  createPlayer(start){
     return new Player(this, start.x, start.y);
+  }
+
+  createEnemies(spawnLayer) {
+    return spawnLayer.objects.map(spawnPoint => {
+        return new Birdman(this, spawnPoint.x, spawnPoint.y);
+    });
+
+}
+
+  createEnemyColliders(enemies,{colliders}){
+    enemies.forEach(enemy => {
+    enemy.addCollider(colliders.platformsColliders);
+    enemy.addCollider(colliders.player)
+    })
   }
 
   createPlayerColliders(player,{colliders}){
@@ -67,12 +90,15 @@ class Play extends Phaser.Scene {
     }
   }
 
-  createEndOfLevel(end){
-    this.physics.add.sprite(end.x,end.y,"end").setSize(5, 200)
+  createEndOfLevel(end, player){
+    const endOfLevel = this.physics.add.sprite(end.x,end.y,"end").setSize(5, this.config.height);
+
+    const eolOverlap = this.physics.add.overlap(player,endOfLevel, () => {
+      eolOverlap.active = false;
+      console.log("Player has won");
+    })
+
   }
-
-  
-
 }
 
 export default Play;
