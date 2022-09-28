@@ -59,8 +59,10 @@ class Play extends Phaser.Scene {
 
   createEnemies(spawnLayer) {
     const enemyTypes = getEnemyTypes();
-    return spawnLayer.objects.map(spawnPoint => {
-      return new enemyTypes[spawnPoint.type](this, spawnPoint.x, spawnPoint.y);
+    return spawnLayer.objects
+      .filter(spawnPoint => enemyTypes[spawnPoint.type] != undefined)
+      .map(spawnPoint => {
+        return new enemyTypes[spawnPoint.type](this, spawnPoint.x, spawnPoint.y);
     })
     
   }
