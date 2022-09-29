@@ -6,7 +6,6 @@ class Enemy extends Phaser.Physics.Arcade.Sprite{
         super(scene,x,y,key);
         scene.add.existing(this);
         scene.physics.add.existing(this);
-    
 
         //Mixins
         Object.assign(this, collidable);
